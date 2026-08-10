@@ -7,10 +7,11 @@ WORKDIR /app
 # ---- deps: install everything once, cached as its own layer ----
 FROM base AS deps
 COPY package.json package-lock.json* ./
-# jose (session JWTs), prisma + @prisma/client, and tsx (to run prisma/seed.ts)
-# only need to be added here if they aren't already in package.json.
-RUN npm install jose prisma @prisma/client tsx --save \
-    && npm ci
+# jose (session JWTs), prisma + @prisma/client (pinned to 6.x — Prisma 7
+# removed `url` from schema.prisma in favor of prisma.config.ts, which this
+# project doesn't use), and tsx (to run prisma/seed.ts).
+# Only needed here if they aren't already pinned in package.json.
+RUN npm install jose "prisma@^6" "@prisma/client@^6" tsx --save
 
 # ---- builder: generate the Prisma client and build Next.js ----
 FROM base AS builder
