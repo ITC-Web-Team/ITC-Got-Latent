@@ -1,44 +1,40 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import ClubSlider from "./ClubSlider";
 import type { ClubDef } from "@/lib/clubs";
 
 interface RatingFormProps {
   clubs: ClubDef[];
   userName: string;
+  initialValues: Record<string, number>;
 }
 
-type Status = "idle" | "submitting" | "success" | "error";
+export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
-export default function RatingForm({ clubs, userName }: RatingFormProps) {
-  const [values, setValues] = useState<Record<string, number>>(() =>
-    Object.fromEntries(clubs.map((c) => [c.slug, 5.0]))
+export default function RatingForm({ clubs, userName, initialValues }: RatingFormProps) {
+  const [values, setValues] = useState<Record<string, number>>(initialValues);
+  const [saveStatus, setSaveStatus] = useState<Record<string, SaveStatus>>(() =>
+    Object.fromEntries(clubs.map((c) => [c.slug, "idle" as SaveStatus]))
   );
-  const [touched, setTouched] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(clubs.map((c) => [c.slug, false]))
-  );
-  const [status, setStatus] = useState<Status>("idle");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const allTouched = useMemo(() => Object.values(touched).every(Boolean), [touched]);
-  const touchedCount = useMemo(() => Object.values(touched).filter(Boolean).length, [touched]);
+  const [errorMessages, setErrorMessages] = useState<Record<string, string>>({});
 
   function handleChange(slug: string, value: number) {
     setValues((prev) => ({ ...prev, [slug]: value }));
-    setTouched((prev) => ({ ...prev, [slug]: true }));
+    // Moving the slider again after a save un-does the "saved" checkmark
+    // so it's clear this club has an unsaved change again.
+    setSaveStatus((prev) => (prev[slug] === "saved" ? { ...prev, [slug]: "idle" } : prev));
   }
 
-  async function handleSubmit() {
-    if (!allTouched || status === "submitting") return;
-    setStatus("submitting");
-    setErrorMessage(null);
+  async function handleSave(slug: string) {
+    setSaveStatus((prev) => ({ ...prev, [slug]: "saving" }));
+    setErrorMessages((prev) => ({ ...prev, [slug]: "" }));
 
     try {
       const res = await fetch("/api/ratings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ratings: values }),
+        body: JSON.stringify({ slug, score: values[slug] }),
       });
 
       if (!res.ok) {
@@ -46,33 +42,36 @@ export default function RatingForm({ clubs, userName }: RatingFormProps) {
         throw new Error(data.error ?? `Request failed with status ${res.status}`);
       }
 
-      setStatus("success");
+      setSaveStatus((prev) => ({ ...prev, [slug]: "saved" }));
     } catch (err) {
-      setStatus("error");
-      setErrorMessage(err instanceof Error ? err.message : "Something went wrong.");
+      setSaveStatus((prev) => ({ ...prev, [slug]: "error" }));
+      setErrorMessages((prev) => ({
+        ...prev,
+        [slug]: err instanceof Error ? err.message : "Something went wrong.",
+      }));
     }
   }
 
-  if (status === "success") {
-    return (
-      <div className="mx-auto max-w-lg rounded-2xl border border-[#e2d3b4] bg-[#fbf6ea] p-10 text-center">
-        <h2 className="text-2xl font-semibold text-[#3d3427]">Thanks, {userName}!</h2>
-        <p className="mt-2 text-[#695943]">Your ratings have been recorded.</p>
-      </div>
-    );
-  }
+  const savedCount = Object.values(saveStatus).filter((s) => s === "saved").length;
 
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#9a7b4f]">
-            Rate every club
+          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#ffb454]">
+            SYS://ITC-RATINGS
           </p>
-          <h1 className="text-3xl font-semibold text-[#3d3427]">Hi {userName}, welcome</h1>
+          <h1 className="mt-1 text-3xl font-semibold text-[#f4f7fa]">
+            Alright {userName}, don&apos;t hold back.
+          </h1>
+          <p className="mt-2 max-w-xl text-sm text-[#7c8a99]">
+            Every club starts at a neutral 5.0. Move the dial and hit save on
+            whichever ones you actually have an opinion about — no need to
+            touch the rest.
+          </p>
         </div>
-        <div className="rounded-full border border-[#e2d3b4] bg-[#fffdf8] px-4 py-2 text-sm font-semibold text-[#3d3427]">
-          {touchedCount} / {clubs.length} rated
+        <div className="rounded-md border border-[#1f2a37] bg-[#10161d] px-4 py-2 text-sm font-semibold tabular-nums text-[#e7edf3]">
+          {savedCount} / {clubs.length} saved
         </div>
       </div>
 
@@ -82,29 +81,13 @@ export default function RatingForm({ clubs, userName }: RatingFormProps) {
             key={club.slug}
             name={club.name}
             value={values[club.slug]}
-            touched={touched[club.slug]}
+            status={saveStatus[club.slug]}
+            errorMessage={errorMessages[club.slug]}
             onChange={(v) => handleChange(club.slug, v)}
+            onSave={() => handleSave(club.slug)}
           />
         ))}
       </div>
-
-      {status === "error" && errorMessage && (
-        <p className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-          {errorMessage}
-        </p>
-      )}
-
-      <button
-        onClick={handleSubmit}
-        disabled={!allTouched || status === "submitting"}
-        className="mt-8 w-full rounded-full bg-[#3d3427] px-6 py-4 text-lg font-semibold text-[#f7f0e1] transition-colors hover:bg-[#554530] disabled:cursor-not-allowed disabled:bg-[#c9bda3]"
-      >
-        {status === "submitting"
-          ? "Submitting…"
-          : allTouched
-          ? "Submit ratings"
-          : `Rate all ${clubs.length} clubs to submit`}
-      </button>
     </div>
   );
 }

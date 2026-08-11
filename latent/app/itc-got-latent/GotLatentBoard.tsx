@@ -66,6 +66,12 @@ export default function GotLatentBoard({ entries }: { entries: LeaderboardEntry[
           </div>
         </header>
 
+        {entries.length === 0 && (
+          <p className="mt-20 text-center text-sm uppercase tracking-[0.3em] text-[#8a6a3a]">
+            Curtain&apos;s up, but nobody&apos;s voted yet.
+          </p>
+        )}
+
         {champion && (
           <section className="relative mt-14 flex flex-col items-center">
             <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[#ffd76a]">

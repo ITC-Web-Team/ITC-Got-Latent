@@ -55,14 +55,14 @@ export default function LoginPage() {
         </p>
 
         <h1 className="text-center text-3xl font-semibold leading-tight tracking-tight text-[#f4f7fa] sm:text-4xl">
-          Rate every technical council club.
+          Fifteen clubs. One slider. Zero mercy.
         </h1>
         <p className="mt-3 max-w-sm text-center text-sm leading-6 text-[#7c8a99]">
-          Sign in with your IITB SSO account to rate all 15 clubs on a 0–10
-          scale. Takes about two minutes.
+          Sign in with SSO and tell us what you really think. No essays, no
+          filters — just the dial and your conscience.
         </p>
 
-        <div className="relative mt-10 w-full rounded-lg border border-[#1f2a37] bg-[#10161d] p-8">
+        <div className="relative mt-10 w-full rounded-lg border border-[#1f2a37] bg-[#10161d] p-8 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)]">
           <CornerBrackets />
 
           <div className="flex flex-col items-center gap-5 text-center">
@@ -74,7 +74,8 @@ export default function LoginPage() {
             <LoginButton />
 
             <p className="text-xs text-[#5c6773]">
-              You&apos;ll be redirected to sso.tech-iitb.org
+              Redirecting to sso.tech-iitb.org — we don&apos;t keep your
+              password, we promise.
             </p>
           </div>
         </div>

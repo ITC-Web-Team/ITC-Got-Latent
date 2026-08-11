@@ -11,10 +11,13 @@ const VALID_SLUGS = new Set(CLUBS.map((c) => c.slug));
 function normalizeScore(raw: unknown): number | null {
   if (typeof raw !== "number" || !Number.isFinite(raw)) return null;
   if (raw < 0 || raw > 10) return null;
-  const rounded = Math.round(raw * 10) / 10;
-  return rounded;
+  return Math.round(raw * 10) / 10;
 }
 
+// Saves one club's rating at a time — { slug, score }. The row for every
+// club already exists at a default of 5.0 by the time a user reaches the
+// form (created on login in app/page.tsx), so this is really an update,
+// but upsert keeps it self-healing if that row is ever missing.
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {
@@ -28,75 +31,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const ratings = (body as { ratings?: unknown }).ratings;
-  if (!ratings || typeof ratings !== "object" || Array.isArray(ratings)) {
+  const { slug, score: rawScore } = (body ?? {}) as { slug?: unknown; score?: unknown };
+
+  if (typeof slug !== "string" || !VALID_SLUGS.has(slug)) {
+    return NextResponse.json({ error: "Unknown or missing club slug" }, { status: 400 });
+  }
+
+  const score = normalizeScore(rawScore);
+  if (score === null) {
     return NextResponse.json(
-      { error: "Body must be { ratings: { [clubSlug]: number } }" },
+      { error: "Score must be a number between 0 and 10" },
       { status: 400 }
     );
   }
 
-  const entries = Object.entries(ratings as Record<string, unknown>);
-
-  // Require a rating for every club — matches "submits after rating all clubs".
-  const missing = CLUBS.filter((c) => !(c.slug in (ratings as Record<string, unknown>)));
-  if (missing.length > 0) {
+  const club = await prisma.club.findUnique({ where: { slug } });
+  if (!club) {
     return NextResponse.json(
-      { error: "Missing ratings for: " + missing.map((c) => c.name).join(", ") },
-      { status: 400 }
-    );
-  }
-
-  const normalized: { slug: string; score: number }[] = [];
-  for (const [slug, value] of entries) {
-    if (!VALID_SLUGS.has(slug)) {
-      return NextResponse.json({ error: `Unknown club: ${slug}` }, { status: 400 });
-    }
-    const score = normalizeScore(value);
-    if (score === null) {
-      return NextResponse.json(
-        { error: `Invalid score for ${slug}: must be a number between 0 and 10` },
-        { status: 400 }
-      );
-    }
-    normalized.push({ slug, score });
-  }
-
-  const clubs = await prisma.club.findMany({
-    where: { slug: { in: normalized.map((n) => n.slug) } },
-  });
-  const clubIdBySlug = new Map(clubs.map((c) => [c.slug, c.id]));
-
-  const missingInDb = normalized.filter((n) => !clubIdBySlug.has(n.slug));
-  if (missingInDb.length > 0) {
-    return NextResponse.json(
-      {
-        error:
-          "Clubs not found in database — run the seed script first: " +
-          missingInDb.map((m) => m.slug).join(", "),
-      },
+      { error: "Club not found in database — run the seed script first." },
       { status: 500 }
     );
   }
 
-  await prisma.$transaction(
-    normalized.map((n) =>
-      prisma.rating.upsert({
-        where: {
-          userId_clubId: {
-            userId: user.userId,
-            clubId: clubIdBySlug.get(n.slug)!,
-          },
-        },
-        update: { score: n.score },
-        create: {
-          userId: user.userId,
-          clubId: clubIdBySlug.get(n.slug)!,
-          score: n.score,
-        },
-      })
-    )
-  );
+  const rating = await prisma.rating.upsert({
+    where: { userId_clubId: { userId: user.userId, clubId: club.id } },
+    update: { score },
+    create: { userId: user.userId, clubId: club.id, score },
+  });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, slug, score: rating.score });
 }
