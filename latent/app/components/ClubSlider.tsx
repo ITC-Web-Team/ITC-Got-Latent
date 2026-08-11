@@ -149,7 +149,7 @@ export default function ClubSlider({
               type="range"
               min={0}
               max={10}
-              step={0.1}
+              step={0.5}
               value={value}
               onChange={(e) => onChange(Math.round(Number(e.target.value) * 10) / 10)}
               className="premium-slider w-full"
