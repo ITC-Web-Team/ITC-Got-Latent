@@ -41,8 +41,13 @@ export default async function HomePage() {
   );
 
   return (
-    <main className="min-h-dvh bg-[#0b0f14] px-6 py-12 text-[#e7edf3]">
-      <RatingForm clubs={CLUBS} userName={user!.name} initialValues={initialValues} />
+    <main className="min-h-dvh bg-[#080c10] px-6 py-12 text-[#e2e8f0]">
+      <RatingForm 
+        clubs={CLUBS} 
+        userName={user!.name} 
+        initialValues={initialValues} 
+        initiallySavedSlugs={Array.from(ratedSlugs)}
+      />
     </main>
   );
 }

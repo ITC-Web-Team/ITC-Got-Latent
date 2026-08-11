@@ -3,10 +3,10 @@ import Image from "next/image";
 import { JetBrains_Mono, IBM_Plex_Sans } from "next/font/google";
 
 const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "600"] });
-const sans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"] });
+const sans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 function CornerBrackets() {
-  const base = "absolute h-6 w-6 border-[#ffb454]/70";
+  const base = "absolute h-6 w-6 border-amber-500/40 transition-colors group-hover:border-amber-500/70";
   return (
     <>
       <span className={`${base} left-0 top-0 border-l-2 border-t-2`} />
@@ -20,67 +20,80 @@ function CornerBrackets() {
 export default function LoginPage() {
   return (
     <main
-      className={`relative flex min-h-dvh items-center justify-center overflow-hidden bg-[#0b0f14] px-6 py-12 text-[#e7edf3] ${sans.className}`}
+      className={`relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#070b10] px-6 py-12 text-[#e2e8f0] ${sans.className}`}
     >
-      {/* Faint dot-grid backdrop — inline style so it doesn't depend on the
-          Tailwind JIT correctly parsing a multi-value arbitrary background */}
+      {/* Dynamic Grid Backdrop */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-40"
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage:
-            "radial-gradient(circle, #1f2a37 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
+            "radial-gradient(circle, #ffffff 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
         }}
       />
+      
+      {/* Background Spotlight Glow */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(60% 50% at 50% 0%, rgba(255,180,84,0.08), transparent 70%)",
+            "radial-gradient(50% 50% at 50% 50%, rgba(245, 158, 11, 0.05), transparent 80%)",
         }}
       />
 
-      <div className="relative z-10 flex w-full max-w-md flex-col items-center">
-        <Image
-          src="/assets/image.jpg"
-          alt="ITC Web Team Logo"
-          width={72}
-          height={72}
-          priority
-          className="mb-6 h-auto w-16 rounded-lg"
-        />
+      <div className="relative z-10 flex w-full max-w-lg flex-col items-center">
+        {/* Glowing Logo Container */}
+        <div className="relative mb-6 p-1.5 rounded-2xl bg-slate-900 border border-slate-800 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+          <Image
+            src="/assets/logo.png"
+            alt="ITC Web Team Logo"
+            width={80}
+            height={80}
+            priority
+            className="h-16 w-16 rounded-xl object-contain"
+          />
+        </div>
 
-        <p className={`mb-2 text-xs tracking-[0.35em] text-[#ffb454] ${mono.className}`}>
-          SYS://ITC-RATINGS
+        <p className={`mb-3 text-[10px] font-bold tracking-[0.4em] text-amber-500 uppercase ${mono.className}`}>
+          SYS://ITC-VOTING-PORTAL
         </p>
 
-        <h1 className="text-center text-3xl font-semibold leading-tight tracking-tight text-[#f4f7fa] sm:text-4xl">
-          Fifteen clubs. One slider. Zero mercy.
+        <h1 className="text-center text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl max-w-md">
+          Fifteen clubs.<br/>
+          One slider.<br/>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-200 to-amber-500 text-glow-amber">
+            Zero mercy.
+          </span>
         </h1>
-        <p className="mt-3 max-w-sm text-center text-sm leading-6 text-[#7c8a99]">
-          Sign in with SSO and tell us what you really think. No essays, no
-          filters — just the dial and your conscience.
+        
+        <p className="mt-4 max-w-sm text-center text-sm leading-relaxed text-slate-400">
+          Authenticate through IITB SSO to enter the rating console. Drag the sliders, save your votes, and shape the leaderboard.
         </p>
 
-        <div className="relative mt-10 w-full rounded-lg border border-[#1f2a37] bg-[#10161d] p-8 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)]">
+        {/* Action Card Container */}
+        <div className="relative group mt-10 w-full rounded-2xl border border-slate-800/80 bg-slate-950/65 p-8 md:p-10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-md">
           <CornerBrackets />
 
-          <div className="flex flex-col items-center gap-5 text-center">
-            <div className={`flex items-center gap-2 text-xs text-[#7c8a99] ${mono.className}`}>
-              <span className="h-2 w-2 animate-pulse rounded-full bg-[#ffb454]" />
-              awaiting authentication
+          <div className="flex flex-col items-center gap-6 text-center">
+            <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 ${mono.className}`}>
+              <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
+              awaiting secure authentication
             </div>
 
-            <LoginButton />
+            <div className="w-full max-w-xs transition-transform duration-300 hover:scale-[1.02]">
+              <LoginButton />
+            </div>
 
-            <p className="text-xs text-[#5c6773]">
-              Redirecting to sso.tech-iitb.org — we don&apos;t keep your
-              password, we promise.
+            <p className="text-[11px] text-slate-500 max-w-xs leading-normal">
+              You will be redirected to the secure Single Sign-On service (sso.tech-iitb.org) for IIT Bombay.
             </p>
           </div>
         </div>
+        
+        <footer className="mt-16 text-center text-[10px] uppercase tracking-widest text-slate-600 font-mono">
+          ITC Web Team &copy; {new Date().getFullYear()} &middot; Devs of IITB
+        </footer>
       </div>
     </main>
   );
 }
-
