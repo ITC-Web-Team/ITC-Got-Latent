@@ -79,12 +79,12 @@ export default function ClubSlider({
   }
 
   const handleDecrement = () => {
-    const newValue = Math.max(0, Math.round((value - 0.1) * 10) / 10);
+    const newValue = Math.max(0, Math.round((value - 0.5) * 10) / 10);
     onChange(newValue);
   };
 
   const handleIncrement = () => {
-    const newValue = Math.min(10, Math.round((value + 0.1) * 10) / 10);
+    const newValue = Math.min(10, Math.round((value + 0.5) * 10) / 10);
     onChange(newValue);
   };
 
