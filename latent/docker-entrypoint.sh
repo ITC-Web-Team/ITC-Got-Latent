@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-echo "Applying database migrations..."
-npx prisma migrate deploy
+echo "Syncing database schema..."
+npx prisma db push --skip-generate --accept-data-loss
 
 echo "Seeding clubs (safe to re-run — upserts by slug)..."
 npx prisma db seed
