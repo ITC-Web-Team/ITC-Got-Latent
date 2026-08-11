@@ -33,18 +33,8 @@ const confettiPieces = Array.from({ length: CONFETTI_COUNT }, (_, i) => {
 export default function GotLatentBoard({ entries }: { entries: LeaderboardEntry[] }) {
   const [champion, ...rest] = entries;
   
-  // State for the interactive judge buzzers!
-  const [buzzers, setBuzzers] = useState<boolean[]>([true, false, false, true]);
   // State to trigger a dramatic screen flash when the main golden buzzer is clicked
   const [flash, setFlash] = useState(false);
-
-  const toggleBuzzer = (index: number) => {
-    setBuzzers((prev) => {
-      const next = [...prev];
-      next[index] = !next[index];
-      return next;
-    });
-  };
 
   const triggerGoldenFlash = () => {
     setFlash(true);
@@ -88,38 +78,6 @@ export default function GotLatentBoard({ entries }: { entries: LeaderboardEntry[
             ))}
           </div>
         </header>
-
-        {/* 4 Interactive Judge Buzzer X Panels (Vibe of the Show!) */}
-        <section className="mt-8 mb-12 flex justify-center gap-3 sm:gap-6">
-          {buzzers.map((isBuzzed, idx) => (
-            <button
-              key={idx}
-              onClick={() => toggleBuzzer(idx)}
-              className={`relative flex h-14 w-14 sm:h-20 sm:w-20 items-center justify-center rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
-                isBuzzed
-                  ? "bg-red-950/80 border-red-500 shadow-[0_0_25px_rgba(239,68,68,0.5),inset_0_0_15px_rgba(239,68,68,0.3)]"
-                  : "bg-slate-950/90 border-slate-800 hover:border-slate-700"
-              }`}
-              aria-label={`Judge Buzzer ${idx + 1}`}
-            >
-              {/* Outer glowing X */}
-              <span 
-                className={`text-2xl sm:text-4xl font-black font-mono transition-all duration-300 ${
-                  isBuzzed 
-                    ? "text-red-500 text-glow-red scale-110" 
-                    : "text-slate-800"
-                }`}
-              >
-                X
-              </span>
-              
-              {/* Judge Labels */}
-              <span className="absolute bottom-1 text-[8px] sm:text-[9px] uppercase tracking-wider text-slate-500 font-semibold font-mono">
-                J-{idx + 1}
-              </span>
-            </button>
-          ))}
-        </section>
 
         {entries.length === 0 && (
           <p className="mt-20 text-center text-sm uppercase tracking-[0.3em] text-slate-500">
