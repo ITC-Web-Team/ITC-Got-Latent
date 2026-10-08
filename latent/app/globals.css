@@ -17,6 +17,8 @@ body {
   overflow-x: hidden;
 }
 
+
+
 /* Custom range input track & thumb styling */
 input[type="range"].premium-slider {
   -webkit-appearance: none;
